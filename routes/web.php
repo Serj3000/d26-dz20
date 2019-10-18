@@ -62,48 +62,59 @@ Route::get('/categories', function () {
     return view('categories',['postas'=>$posts]);
  })->name('blog.categories');
 
-//___________________________________________
+
+
+
+
+//______________Start_d25-dz21__________________
 
 Route::get('/admin/login', function () {
-    //return view('admin.login');
     return view('/admin/login');
- })->name('admin.login.get');;
+})->name('admin.login.get');
 
- Route::post('/admin/login', function (Illuminate\Http\Request $request) {
+Route::post('/admin/login', function (Illuminate\Http\Request $request) {
 
-    $data=$request->validate([
-        'email'=>'required|email|exists:users.email',
-        'password'=>'required|min:8|max:100',
-    ]);
+$data=$request->validate([
+    'email'=>'required|email|exists:users,email',
+    'password'=>'required|min:8|max:100',
+]);
 
-    $email=$data['email']; 
-    $password=$data['password'];
+$email=$data['email']; 
+$password=$data['password'];
 
-    $credentials=[
-        'email'=>$email,
-        'password'=>$password,
-    ];
+$credentials=[
+    'email'=>$email,
+    'password'=>$password,
+];
 
-    if(\Illuminate\Support\Fasades\Auth::attemp($credentials)){
-        return redirect()->route('admin.auth.member');
-    }
+if(\Illuminate\Support\Facades\Auth::attempt($credentials)){
+    return redirect()->route('admin.auth.member');
+}
 
- })->name('admin.login.auth');
+})->name('admin.login.auth');
 
- Route::get('/admin/logout', function () {
-    //return view('admin.login');
- });
+Route::get('/admin/logout', function () {
+\Illuminate\Support\Facades\Auth::logout();
+return redirect('/');
+})->middleware('auth'); // middleware('auth') здесь необходим, для случая, когда небыл выполнен login
 
- Route::get('/admin/member', function () {
-    //return view('admin.login');
- })->name('admin.auth.member');
+Route::get('/admin/member', function () {
+    $user=\Illuminate\Support\Facades\Auth::user();
+})->middleware('auth')->name('admin.auth.member');
 
- //______________________________________________________________________________
+//_______________End_d25-dz21____________________
+
+
+
+
+//___________Start API GitHub d26-dz20__________________
 
 //https://developer.github.com/apps/building-oauth-apps/authorizing-oauth-apps/
 
 Route::get('/oauth', function () {
-    $url="https://github.com/login/oauth/authorize"; 
+    
+    $url="https://api.telegram.org";
+
     $parameters=[
         'client_id'=>'',
         'redirect_uri'=>'http://d26test-dz20.ua/callback',
@@ -114,18 +125,99 @@ Route::get('/oauth', function () {
 
 });
 
-Route::get('/callback', function (Illuminate\Http\Request $request) {
-    // $url="https://github.com/login/oauth/access_token";   //POST https://github.com/login/oauth/access_token
+Route::get('/callback', function (\Illuminate\Http\Request $request) {
 
-    // $code=$request->get('code');
+    $url="https://github.com/login/oauth/access_token";   //POST https://github.com/login/oauth/access_token
 
-    // $parameters=[
-    //     'client_id'=>'',
-    //     'client_secret'=>'',
-    //     'code'=>$code,
-    //     'redirect_uri'=>'http://d26test-dz20.ua/callback',     
-    // ];
+    $code=$request->get('code');
 
-    // $url=>$url.'?'.http_build_query($parameters);
+    $parameters=[
+        'client_id'=>'',
+        'client_secret'=>'',
+        'code'=>$code,
+        'redirect_uri'=>'http://d26test-dz20.ua/callback',     
+    ];
+
+    $url=>$url.'?'.http_build_query($parameters);
+
+    $client=new \GuzzleHttp\Client();
+    $response=$client->post($url);
+    $contents=$response->getBody()->getContents();
+
+    parse_str($contents, $parameters);
+
+    $token=$parameters['access_token'];
+
+    //get user info
+
+    $response=$client->get('hhttps://api.github.com/users',[
+        'headers'=>[
+            'Authorization'=>'token'.$token]
+        ]);
+    
+    $data=json_decode($response->getBody()->getContents(),true);
+
+    $response=$client->get('hhttps://api.github.com/emails',[
+    'headers'=>[
+        'Authorization'=>'token'.$token]
+    ]);
+    
+    $emails=json_decode($response->getBody()->getContents(),true);
+
+    $user=\App\User::where('email','=',$emails[0]['email'])->first();
+
+    if(!$user){
+        $user=new \App\User;
+        $user->name=$data['name'];
+        $user->email=$emails[0]['email'];
+        $user->password=bcrypt('74574635385345');
+        $user->save();
+
+        // Добавить API Bot Telegram
+
+        $url="https://api.telegram.org/bot886184318:AAHgJKTM-GVWdEOGRLVeCz2qb1GFU9R2Zr4/getUpdates"
+    
+        $parameters=[
+            'chat_id'=>'896366319',
+            'text'=>'Новый GitHub пользователь: '.'"$user->email"',
+        ];
+    
+        $url.'?'.http_build_query($parameters);
+
+    }
+
+    \Illuminate\Support\Facades\Auth::login($user,true);
+
+    return redirect()->route('admin.auth.member');
 
 });
+
+//_______________End API GitHub d26-dz20____________________
+
+
+//____________Start API Telegram d26-dz20___________________
+
+//Пример
+//https://api.telegram.org/bot<token>/METHOD_NAME
+//https://api.telegram.org/bot123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11/getMe
+
+
+
+
+// Route::get('/oauth', function () {
+//     $url="https://api.telegram.org/bot886184318:AAHgJKTM-GVWdEOGRLVeCz2qb1GFU9R2Zr4/getUpdates"; 
+//     $parameters=[
+//         //'client_id'=>'896366319',
+//         'chat_id'=>'896366319',
+//         'redirect_uri'=>'http://d26test-dz20.ua/callback',
+//         'scope'=>'user'
+//     ];
+
+//     return view("oauth",['url'=>$url.'?'.http_build_query($parameters)]);
+
+// });
+//*Метод sendMessage через GET
+/*$url="https://api.telegram.org/bot886184318:AAHgJKTM-GVWdEOGRLVeCz2qb1GFU9R2Zr4/sendMessage?chat_id=896366319&text=Test Telegramm Bot API !!!";
+*/
+
+//_______________End API Telegram d26-dz20___________________

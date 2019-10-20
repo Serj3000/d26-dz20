@@ -28,18 +28,18 @@ class DatabaseSeeder extends Seeder
             ['name'=>'Meat', 'slug'=>'meat','created_at'=>date('Y-m-d'),'updated_at'=>date('Y-m-d')],
             ['name'=>'Fastfood', 'slug'=>'fastfood','created_at'=>date('Y-m-d'),'updated_at'=>date('Y-m-d')],
             ['name'=>'Salad', 'slug'=>'salad','created_at'=>date('Y-m-d'),'updated_at'=>date('Y-m-d')],
-            ['name'=>'Soup', 'slug'=>'soup','created_at'=>date('Y-m-d'),'updated_at'=>date('Y-m-d')]
+            ['name'=>'Soup', 'slug'=>'soup','created_at'=>date('Y-m-d'),'updated_at'=>date('Y-m-d')],
         ];
 
         DB::table('categories')->insert($categories);
 
         $users=[
-            ['name' => 'Sara Jancks',
-            'email' => 'sarach.jons@rolty.com',
-            'password' => '$2y$10$TKh8H1.PfQx37YgCzwiKb.KjNyWgaHb9cbcoQgdIVFlYg7B77UdFm', // secret
+            ['name' =>'Sara Jancks',
+            'email' =>'sarach.jons@rolty.com',
+            'password' =>'$2y$10$TKh8H1.PfQx37YgCzwiKb.KjNyWgaHb9cbcoQgdIVFlYg7B77UdFm', // secret
+            'remember_token' => Str::random(10),
             'created_at'=>date('Y-m-d'),
             'updated_at'=>date('Y-m-d'),
-            //'remember_token' => Str::random(10),
             ]
         ];
 

@@ -40,7 +40,8 @@
         {{-- <li><a href="#">Travel</a></li> --}}
         <li><a href="/about-us">About</a></li>
         <li><a href="/contact">Contact</a></li>
-        <li><a href="{{route('admin.login.get')}}">Logout</a></li>
+        <li><a href="{{route('admin.login.get')}}">Login</a></li>
+        <li><a href="{{route('oauth')}}">Oauth2</a></li>
     </ul>
 
 </div>

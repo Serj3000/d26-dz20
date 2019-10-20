@@ -1,8 +1,10 @@
 <?php
+//require_once 'vendor/autoload.php';
 
 use App\Post;
 use App\Category;
 use App\User;
+//use Vendor\Guzzlehttp\Guzzle\Src\Client;
 
 
 /*
@@ -25,7 +27,6 @@ Route::get('/', function () {
     $posts=Post::latest()->paginate(5);
     return view('index',['postas'=>$posts]);
 })->name('blog.index');
-
 
 // Route::get('/', function () {
 //     return view('index');
@@ -107,23 +108,34 @@ Route::get('/admin/member', function () {
 
 
 
-//___________Start API GitHub d26-dz20__________________
+//___________Start Oauth API GitHub d26-dz20__________________
 
 //https://developer.github.com/apps/building-oauth-apps/authorizing-oauth-apps/
 
+//GET https://github.com/login/oauth/authorize
+//POST https://github.com/login/oauth/access_token
+//https://api.github.com/users/Serj3000
+//https://github.com/settings/applications/1154571
+
+
+//MDQ6VXNlcjUyNDIzMDc5
+//a13b2577c6225ab009ca69157a90225f307d393d
+
 Route::get('/oauth', function () {
-    
-    $url="https://api.telegram.org";
+
+    $url="https://github.com/login/oauth/authorize";
 
     $parameters=[
-        'client_id'=>'',
-        'redirect_uri'=>'http://d26test-dz20.ua/callback',
-        'scope'=>'user'
+        'client_id'=>"81979f635760a000baa9",
+        'redirect_uri'=>"http://d26test-dz20.ua/callback",
+        'scope'=>"user"
     ];
+
+    //dd($url.'?'.http_build_query($parameters));
 
     return view("oauth",['url'=>$url.'?'.http_build_query($parameters)]);
 
-});
+})->name('oauth');
 
 Route::get('/callback', function (\Illuminate\Http\Request $request) {
 
@@ -131,38 +143,62 @@ Route::get('/callback', function (\Illuminate\Http\Request $request) {
 
     $code=$request->get('code');
 
+    // //dd($code);
+    // // exit;
+    // echo '<br> $code= '.$code;
+
     $parameters=[
-        'client_id'=>'',
-        'client_secret'=>'',
+        'client_id'=>'81979f635760a000baa9',
+        'client_secret'=>'5a7dc3985d466490d37f220fd6154129fb3f990c',
         'code'=>$code,
-        'redirect_uri'=>'http://d26test-dz20.ua/callback',     
+        'redirect_uri'=>'http://d26test-dz20.ua/callback',
     ];
 
-    $url=>$url.'?'.http_build_query($parameters);
+    $url=$url.'?'.http_build_query($parameters);
 
     $client=new \GuzzleHttp\Client();
     $response=$client->post($url);
     $contents=$response->getBody()->getContents();
 
+    // dd($contents);
+
+    // echo '<br> $contents= '. $contents;
+
     parse_str($contents, $parameters);
 
     $token=$parameters['access_token'];
 
-    //get user info
+    // echo '<br> $token= '. $token;
+    // //exit;
 
-    $response=$client->get('hhttps://api.github.com/users',[
-        'headers'=>[
+    // //get user info
+
+    //$response=$client->get('https://api.github.com/users',[
+    $response=$client->get('https://api.github.com/users/Serj3000',[
+            'headers'=>[
             'Authorization'=>'token'.$token]
         ]);
     
+    //dd($response->getBody()->getContents());
+    //             // exit;
+
     $data=json_decode($response->getBody()->getContents(),true);
 
-    $response=$client->get('hhttps://api.github.com/emails',[
-    'headers'=>[
-        'Authorization'=>'token'.$token]
-    ]);
+    
+                            //echo '<br> $data= '. $data;
+                            //echo '<br> $data= '. var_dump($data);
+                            //dd($data);
+                            //exit;
+
+    $response=$client->get('https://api.github.com/users/emails',[ //https://api.github.com/users/emails
+            'headers'=>[
+            'Authorization'=>'token'.$token]
+        ]);
     
     $emails=json_decode($response->getBody()->getContents(),true);
+
+                            //dd($emails);
+                            //exit;
 
     $user=\App\User::where('email','=',$emails[0]['email'])->first();
 
@@ -173,51 +209,22 @@ Route::get('/callback', function (\Illuminate\Http\Request $request) {
         $user->password=bcrypt('74574635385345');
         $user->save();
 
-        // Добавить API Bot Telegram
+    // Добавить API Bot Telegram
 
         $url="https://api.telegram.org/bot886184318:AAHgJKTM-GVWdEOGRLVeCz2qb1GFU9R2Zr4/getUpdates"
     
         $parameters=[
             'chat_id'=>'896366319',
-            'text'=>'Новый GitHub пользователь: '.'"$user->email"',
+            'text'=>'Новый GitHub пользователь:'.$user->email,
         ];
     
-        $url.'?'.http_build_query($parameters);
+        $url=$url.'?'.http_build_query($parameters);
+    };
 
-    }
+        \Illuminate\Support\Facades\Auth::login($user,true);
 
-    \Illuminate\Support\Facades\Auth::login($user,true);
-
-    return redirect()->route('admin.auth.member');
+        return redirect()->route('admin.auth.member');
 
 });
 
-//_______________End API GitHub d26-dz20____________________
-
-
-//____________Start API Telegram d26-dz20___________________
-
-//Пример
-//https://api.telegram.org/bot<token>/METHOD_NAME
-//https://api.telegram.org/bot123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11/getMe
-
-
-
-
-// Route::get('/oauth', function () {
-//     $url="https://api.telegram.org/bot886184318:AAHgJKTM-GVWdEOGRLVeCz2qb1GFU9R2Zr4/getUpdates"; 
-//     $parameters=[
-//         //'client_id'=>'896366319',
-//         'chat_id'=>'896366319',
-//         'redirect_uri'=>'http://d26test-dz20.ua/callback',
-//         'scope'=>'user'
-//     ];
-
-//     return view("oauth",['url'=>$url.'?'.http_build_query($parameters)]);
-
-// });
-//*Метод sendMessage через GET
-/*$url="https://api.telegram.org/bot886184318:AAHgJKTM-GVWdEOGRLVeCz2qb1GFU9R2Zr4/sendMessage?chat_id=896366319&text=Test Telegramm Bot API !!!";
-*/
-
-//_______________End API Telegram d26-dz20___________________
+//_______________End Oauth API GitHub d26-dz20____________________

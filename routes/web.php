@@ -173,12 +173,12 @@ Route::get('/callback', function (\Illuminate\Http\Request $request) {
 
     // //get user info
 
-    //$response=$client->get('https://api.github.com/users',[
-    $response=$client->get('https://api.github.com/users/Serj3000',[
-            'headers'=>[
-            'Authorization'=>'token'.$token]
-        ]);
-    
+    //$response=$client->get('https://api.github.com/users',[ /Serj3000
+$response=$client->get('https://api.github.com/users/Serj3000',[ 
+        'headers'=>[
+        'Authorization'=>'token'.$token]
+    ]);
+
     //dd($response->getBody()->getContents());
     //             // exit;
 
@@ -190,7 +190,7 @@ Route::get('/callback', function (\Illuminate\Http\Request $request) {
                             //dd($data);
                             //exit;
 
-    $response=$client->get('https://api.github.com/users/emails',[ //https://api.github.com/users/emails
+    $response=$client->get('https://api.github.com/users/emails',[ //https://api.github.com/user/email
             'headers'=>[
             'Authorization'=>'token'.$token]
         ]);
@@ -211,11 +211,11 @@ Route::get('/callback', function (\Illuminate\Http\Request $request) {
 
     // Добавить API Bot Telegram
 
-        $url="https://api.telegram.org/bot886184318:AAHgJKTM-GVWdEOGRLVeCz2qb1GFU9R2Zr4/getUpdates"
+        $url="https://api.telegram.org/bot886184318:AAHgJKTM-GVWdEOGRLVeCz2qb1GFU9R2Zr4/getUpdates";
     
         $parameters=[
             'chat_id'=>'896366319',
-            'text'=>'Новый GitHub пользователь:'.$user->email,
+            'text'=>'Новый GitHub пользователь:',//.$user->email,
         ];
     
         $url=$url.'?'.http_build_query($parameters);
